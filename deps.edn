@@ -1,0 +1,18 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+        aero/aero {:mvn/version "1.1.6"}
+        com.cognitect.aws/api {:mvn/version "0.8.524"}
+        com.cognitect.aws/endpoints {:mvn/version "1.1.12.105"}
+        com.cognitect.aws/secretsmanager {:mvn/version "814.2.1008.0"}
+        metosin/jsonista {:mvn/version "0.3.4"}}
+ :aliases
+ {:test {:extra-paths ["test"]}
+  :runner
+  {:extra-deps {com.cognitect/test-runner
+                {:git/url "https://github.com/cognitect-labs/test-runner"
+                 :sha "b6b3193fcc42659d7e46ecd1884a228993441182"}}
+   :main-opts ["-m" "cognitect.test-runner"
+               "-d" "test"]}
+  :release
+  {:extra-deps {applied-science/deps-library {:mvn/version "0.4.0"}}
+   :main-opts ["-m" "applied-science.deps-library"]}}}
