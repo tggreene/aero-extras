@@ -1,6 +1,6 @@
 # aero-extras
 
-Adds #json and #aws-secret tags for aero.
+Adds `#concat`, `#format`, `#env-`, `#json` and `#aws-secret` tags for aero.
 
 ```
 tggreene/aero-extras {:mvn/version "0.2.0"}
