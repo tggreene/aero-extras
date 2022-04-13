@@ -20,6 +20,31 @@
     (json-reader value)
     (throw (ex-info "Couldn't find a valid json library on classpath" {}))))
 
+(defmethod aero/reader 'concat
+  [_ _ value]
+  (apply concat value))
+
+(defmethod aero/reader 'format
+  [_ _ value]
+  (apply format value))
+
+(def ^:private get-env #'aero/get-env)
+
+;; Replicate shell var expansion behaviour ${X:-value}
+;; Useful in the case where a value can optionally be set to false
+;; in the environment
+;; Can be used in place of #env for plain env values #env- SOMETHING
+
+(defmethod aero/reader 'env-
+  [_ _ value]
+  (let [[env-var fallback] (if (sequential? value)
+                             value
+                             [(first value) nil])
+        env-val (get-env env-var)]
+    (if (some? env-val)
+      env-val
+      fallback)))
+
 (defn handle-aws-anomaly
   [{:cognitect.anomalies/keys [category message]
     :cognitect.aws.util/keys [throwable]

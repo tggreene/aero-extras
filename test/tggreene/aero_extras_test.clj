@@ -2,14 +2,36 @@
   (:require [clojure.test :refer [deftest testing is]]
             [aero.core :as aero]
             [tggreene.aero-extras :as aero-extras]
-            [clojure.java.io :as io]
             [cognitect.aws.client.api :as aws]))
 
-(deftest can-parse-json-in-aero-config
+(deftest aero-reader-json-test
   (let [config (.getBytes "{:config #json \"{\\\"a\\\":{\\\"b\\\":\\\"c\\\"}}\"}")]
     (is (= {:config {:a {:b "c"}}} (aero/read-config config)))))
 
-(deftest tries-to-resolve-aws-secret-in-aero-config
+(deftest aero-reader-concat-test
+  (let [config (.getBytes "{:config #concat [[:a :b :c] [:d :e :f]]}")]
+    (is (= {:config [:a :b :c :d :e :f]}
+           (aero/read-config config)))))
+
+(deftest aero-reader-format-test
+  (let [config (.getBytes "{:config #format [\"foo %s\" \"bar\"]}")]
+    (is (= {:config "foo bar"} (aero/read-config config)))))
+
+(deftest aero-reader-env--test
+  (let [config (.getBytes "{:config #boolean #env- [USE_MOCK \"true\"]}")]
+    (with-redefs [aero-extras/get-env #(when (= 'USE_MOCK %) "false")]
+      (is (= {:config false} (aero/read-config config))))
+    (with-redefs [aero-extras/get-env (constantly nil)]
+      (is (= {:config true} (aero/read-config config)))))
+  (testing "compare against exiting #env"
+    (let [config (.getBytes "{:config #boolean #or [#env USE_MOCK \"true\"]}")]
+      (with-redefs [aero-extras/get-env #(when (= 'USE_MOCK %) "false")]
+        ;; Something in the implementation of 'or is off here
+        (is (= {:config true} (aero/read-config config))))
+      (with-redefs [aero-extras/get-env (constantly nil)]
+        (is (= {:config true} (aero/read-config config)))))))
+
+(deftest aero-reader-aws-secret-test
   (let [config (.getBytes "{:secret #aws-secret \"secret-key\"}")]
     (testing "successful result"
       (with-redefs [aws/invoke (fn [_ _]
