@@ -3,7 +3,7 @@
 Adds `#concat`, `#format`, `#env-`, `#json` and `#aws-secret` tags for aero.
 
 ```
-tggreene/aero-extras {:mvn/version "0.2.0"}
+tggreene/aero-extras {:mvn/version "0.3.0"}
 ```
 
 ## Usage
@@ -26,13 +26,18 @@ Aero config:
  :env- #env- [HOME "/default/directory"]}
 ```
 
+### AWS Library
+
+`0.3.0` uses `amazonica` over `cognitect-labs/aws-api` as it doesn't appear to
+support IMDSv2 ([issue](https://github.com/cognitect-labs/aws-api/issues/165)).
+
 ### JSON Library
 
 Provides jsonista by default, but you can exclude this dependency and supply
 cheshire instead.
 
 ```clojure
-tggreene/aero-extras {:mvn/version "0.2.0"
+tggreene/aero-extras {:mvn/version "0.3.0"
                       :exclusions [metosin/jsonista]}
 cheshire/cheshire {:mvn/version "5.10.1"}
 ```

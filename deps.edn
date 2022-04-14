@@ -1,10 +1,14 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        aero/aero {:mvn/version "1.1.6"}
-        com.cognitect.aws/api {:mvn/version "0.8.524"}
-        com.cognitect.aws/endpoints {:mvn/version "1.1.12.105"}
-        com.cognitect.aws/secretsmanager {:mvn/version "814.2.1008.0"}
-        metosin/jsonista {:mvn/version "0.3.4"}}
+ :deps {aero/aero {:mvn/version "1.1.6"}
+        amazonica/amazonica {:mvn/version "0.3.161"
+                             :exclusions [com.amazonaws/aws-java-sdk
+                                          com.amazonaws/amazon-kinesis-client
+                                          com.amazonaws/dynamodb-streams-kinesis-adapter
+                                          joda-time/joda-time
+                                          com.taoensso/nippy]}
+        com.amazonaws/aws-java-sdk-secretsmanager {:mvn/version "1.12.132"}
+        metosin/jsonista {:mvn/version "0.3.4"}
+        org.clojure/clojure {:mvn/version "1.10.1"}}
  :aliases
  {:test {:extra-paths ["test"]}
   :runner

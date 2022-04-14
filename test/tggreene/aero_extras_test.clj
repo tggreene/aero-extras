@@ -2,7 +2,8 @@
   (:require [clojure.test :refer [deftest testing is]]
             [aero.core :as aero]
             [tggreene.aero-extras :as aero-extras]
-            [cognitect.aws.client.api :as aws]))
+            [amazonica.aws.secretsmanager :as secretsmanager])
+  (:import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException))
 
 (deftest aero-reader-json-test
   (let [config (.getBytes "{:config #json \"{\\\"a\\\":{\\\"b\\\":\\\"c\\\"}}\"}")]
@@ -31,6 +32,7 @@
       (with-redefs [aero-extras/get-env (constantly nil)]
         (is (= {:config true} (aero/read-config config)))))))
 
+#_ 
 (deftest aero-reader-aws-secret-test
   (let [config (.getBytes "{:secret #aws-secret \"secret-key\"}")]
     (testing "successful result"
@@ -81,3 +83,32 @@
                     :message "Secrets Manager can't find the specified secret."
                     :additional-info {:type "ResourceNotFoundException"}}
                    (ex-data e)))))))))
+
+(deftest aero-reader-aws-secret-test
+  (let [config (.getBytes "{:secret #aws-secret \"secret-key\"}")]
+    (testing "successful result"
+      (with-redefs [secretsmanager/get-secret-value
+                    (fn [_]
+                      {:arn "arn:aws:secretsmanager:us-east-2:000000000000:secret:secret-key"
+                       :created-date #inst "2021-11-11T00:00:00.000-00:00"
+                       :name "secret-key"
+                       :secret-string "secret-value"
+                       :version-id "b7a3319f-b624-48be-bd46-361353261214"
+                       :version-stages ["AWSCURRENT"]})]
+        (is (= {:secret "secret-value"}
+               (aero/read-config config)))))
+
+    (testing "let exceptions from client bubble"
+      (with-redefs [secretsmanager/get-secret-value
+                    (fn [_]
+                      (throw (ResourceNotFoundException.
+                              (str "Secrets Manager can't find the specified secret. "
+                                   "(Service: AWSSecretsManager; "
+                                   "Status Code: 400; "
+                                   "Error Code: ResourceNotFoundException; "
+                                   "Request ID: 012ccb50-75d1-458f-8054-41001ff56bf8; "
+                                   "Proxy: null)"))))]
+        (try
+          (aero/read-config config)
+          (catch Exception e
+            (is (.contains (.getMessage e) "Secrets Manager can't find the specified secret."))))))))

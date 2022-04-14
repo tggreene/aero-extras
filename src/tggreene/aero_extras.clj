@@ -1,9 +1,6 @@
 (ns tggreene.aero-extras
   (:require [aero.core :as aero]
-            [cognitect.aws.client.api :as aws]))
-
-(def secretsmanager-client
-  (aws/client {:api :secretsmanager}))
+            [amazonica.aws.secretsmanager :as secretsmanager]))
 
 (def json-reader
   (or (when-let [read-value (requiring-resolve 'jsonista.core/read-value)]
@@ -58,11 +55,4 @@
 
 (defmethod aero/reader 'aws-secret
   [_ _ value]
-  (let [result
-        (aws/invoke
-         secretsmanager-client
-         {:op :GetSecretValue
-          :request {:SecretId value}})]
-    (if-not (contains? result :cognitect.anomalies/category)
-      (:SecretString result)
-      (throw (handle-aws-anomaly result)))))
+  (:secret-string (secretsmanager/get-secret-value {:secret-id value})))
